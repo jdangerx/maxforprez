@@ -1,4 +1,3 @@
-
 BasicGame.Game = function (game) {
 
 	//	When a State is added to Phaser it automatically has the following properties set on it, even if they already exist:
@@ -28,28 +27,122 @@ BasicGame.Game = function (game) {
 BasicGame.Game.prototype = {
 
   create: function () {
-    console.log("Hey game starts");
-    this.player = this.game.add.sprite(this.game.width/2, this.game.height/2, "player");
-    this.game.physics.arcade.enable(this.player);
-    
-    //	Honestly, just about anything could go here. It's YOUR game after all. Eat your heart out!
-    
+    var bg = this.game.add.sprite(0, this.game.height, "ground");
+    this.numEnemies = 5;
+    bg.position.y -= bg.height;
+    this.p = this.game.add.group();
+    this.player = this.p.create(this.game.width/2, this.game.height/2, "player");
+    this.player.anchor.set(0.5, 0.5);
+    this.player.leftRight = "right";
+    this.player.accreditations = 3;
+
+    this.game.physics.arcade.enable(this.p);
+    this.e = this.game.add.group();
+    for (var i = 0; i < this.numEnemies; i++) {
+      this.spawnEnemy();
+    }
+    this.game.physics.arcade.enable(this.e);
+
+    window.setInterval(function() {
+      this.e.forEach(function(e) {
+        this.game.physics.arcade.moveToObject(e, this.player, 50);
+      }.bind(this));
+    }.bind(this), 1000);
+
+    this.initCtls();
   },
-  
+
+  initCtls: function() {
+    var keyMap = {
+      "j": 74,
+      "i": 73,
+      "o": 79,
+      "l": 76,
+      ",": 188,
+      "m": 77
+    };
+
+    var maxvel = 70;
+    var keyVels = {
+      "j": new Phaser.Point(maxvel, 0),
+      "i": new Phaser.Point(maxvel*0.2, maxvel*0.9),
+      "o": new Phaser.Point(-maxvel*0.5, maxvel*0.7),
+      "l": new Phaser.Point(-maxvel, 0),
+      ",": new Phaser.Point(-maxvel*0.2, -maxvel*0.9),
+      "m": new Phaser.Point(maxvel*0.5, -maxvel*0.7)
+    };
+    this.ctl = {};
+    var atkKey = this.game.input.keyboard.addKey(Phaser.Keyboard.A);
+    atkKey.onDown.add(this.attack.bind(this));
+
+    for (var key in keyMap) {
+      if (keyMap.hasOwnProperty(key)) {
+        this.ctl[key] = this.game.input.keyboard.addKey(keyMap[key]);
+
+        this.ctl[key].onUp.add(function(key) {
+          this.player.body.velocity = new Phaser.Point(0, 0);
+        }.bind(this, key));
+
+        this.ctl[key].onHoldCallback = function(key) {
+          this.player.body.velocity = keyVels[key];
+        }.bind(this, key);
+
+      }
+    }
+  },
+
+  attack: function() {
+    console.log(this.player.leftRight);
+    var reach = this.player.leftRight === "left"? -50 : 50;
+    this.e.forEach(function(e) {
+      // if (Math.abs(e.position.y - this.player.position.y) > this.player.height) {
+        // return;
+      // }
+      if (e.position.x - this.player.position.x > reach) {
+        return;
+      }
+      e.kill();
+      // die, and set timeout to spawn new
+    }.bind(this));
+
+  },
+
+  spawnEnemy: function() {
+    var randY = Math.random();
+    var randX = Math.round(Math.random());
+    var enemy = this.e.create(randX * this.game.width, randY * this.game.height, "player");
+    enemy.alpha = 0.4;
+    enemy.anchor.set(0.5, 0.5);
+  },
+
   update: function () {
-    
-    //	Honestly, just about anything could go here. It's YOUR game after all. Eat your heart out!
-    
+    this.player.velocity *= 0.98;
+    if (this.player.body.velocity.x > 0) {
+      this.player.leftRight = "right";
+    } else if (this.player.body.velocity.x < 0) {
+      this.player.leftRight = "left";
+    }
+    this.game.physics.arcade.collide(this.player, this.e, this.loseAccreditation.bind(this));
   },
-  
+
+  loseAccreditation: function () {
+    this.player.accreditations -= 1;
+    console.log(this.player.accreditations);
+    // play anim
+    if (this.player.accreditations === 0) {
+      this.quitGame();
+    }
+  },
+
   quitGame: function (pointer) {
-    
-    //	Here you should destroy anything you no longer need.
+
     //	Stop music, delete sprites, purge caches, free resources, all that good stuff.
-    
+
     //	Then let's go back to the main menu.
+
+    // countdown
     this.state.start('MainMenu');
-    
+
   }
 
 };

@@ -26,8 +26,10 @@ BasicGame.Preloader.prototype = {
 		//	Here we load the rest of the assets our game needs.
 		//	You can find all of these assets in the Phaser Examples repository
 
-	    this.load.image('playbtn', 'images/play_button.png');
-	    this.load.image('ground', 'images/ground.png');
+	  this.load.image('playbtn', 'images/play_button.png');
+	  this.load.image('ground', 'images/ground.png');
+	  this.load.image('shadow', 'images/shadow.png');
+	  this.load.image('bg', 'images/shadow.png');
           this.load.spritesheet('player', 'images/phaser-dude.png', 27, 40);
 
 	},
