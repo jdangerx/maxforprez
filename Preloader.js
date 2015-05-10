@@ -30,13 +30,18 @@ BasicGame.Preloader.prototype = {
 	  this.load.image('ground', 'images/ground.png');
 	  this.load.image('shadow', 'images/shadow.png');
 	  this.load.image('bg', 'images/shadow.png');
-          this.load.spritesheet('player', 'images/phaser-dude.png', 27, 40);
+	  this.load.image('menubg', 'images/menu_bg.png');
+          this.load.spritesheet('fridgeR', 'images/fridge/walkR.png', 260, 316);
+          this.load.spritesheet('fridgeL', 'images/fridge/walkL.png', 260, 316);
+          this.load.spritesheet('atkL', 'images/fridge/atkL.png', 260, 316);
+          this.load.spritesheet('atkR', 'images/fridge/atkR.png', 260, 316);
+          this.load.spritesheet('lawyer', 'images/lawyer/lawyer.png', 150, 216);
 
 	},
 
 	create: function () {
 
-		this.state.start('MainMenu');
+		this.state.start('Game');
 
 	}
 

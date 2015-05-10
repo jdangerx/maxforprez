@@ -27,21 +27,28 @@ BasicGame.Game = function (game) {
 BasicGame.Game.prototype = {
 
   create: function () {
-    var bg = this.game.add.sprite(0, this.game.height, "ground");
+    var bg = this.game.add.sprite(0, 0, "ground");
     this.numEnemies = 5;
-    bg.position.y -= bg.height;
+    bg.scale.y = 2;
     this.p = this.game.add.group();
-    this.player = this.p.create(this.game.width/2, this.game.height/2, "player");
+    this.player = this.p.create(this.game.width/2, this.game.height/2, "fridgeR");
     this.player.anchor.set(0.5, 0.5);
     this.player.leftRight = "right";
     this.player.accreditations = 3;
-
+    this.funds = 0
+    this.score = this.game.add.text(this.game.width/2,
+                                    this.game.height/4,
+                                    "Campaign Funding: " + this.funds);
+    this.score.anchor.set(0.5, 0.5);
+    this.creds = this.game.add.text(this.game.width/2,
+                                    this.game.height/3,
+                                    "Accreditations: " + this.player.accreditations);
+    this.creds.anchor.set(0.5, 0.5);
     this.game.physics.arcade.enable(this.p);
     this.e = this.game.add.group();
     for (var i = 0; i < this.numEnemies; i++) {
       this.spawnEnemy();
     }
-    this.game.physics.arcade.enable(this.e);
 
     window.setInterval(function() {
       this.e.forEach(function(e) {
@@ -52,27 +59,28 @@ BasicGame.Game.prototype = {
     this.initCtls();
   },
 
+  updateScore: function() {
+    this.score.text = "Campaign Funding: " + this.funds;
+    this.creds.text = "Accreditations: " + this.player.accreditations;
+  },
+
   initCtls: function() {
     var keyMap = {
-      "j": 74,
-      "i": 73,
+      "y": 89,
       "o": 79,
-      "l": 76,
+      "b": 66,
       ",": 188,
-      "m": 77
     };
 
     var maxvel = 70;
     var keyVels = {
-      "j": new Phaser.Point(maxvel, 0),
-      "i": new Phaser.Point(maxvel*0.2, maxvel*0.9),
-      "o": new Phaser.Point(-maxvel*0.5, maxvel*0.7),
-      "l": new Phaser.Point(-maxvel, 0),
-      ",": new Phaser.Point(-maxvel*0.2, -maxvel*0.9),
-      "m": new Phaser.Point(maxvel*0.5, -maxvel*0.7)
+      "y": new Phaser.Point(maxvel, maxvel),
+      "o": new Phaser.Point(-maxvel, maxvel),
+      "b": new Phaser.Point(maxvel, -maxvel),
+      ",": new Phaser.Point(-maxvel, -maxvel),
     };
     this.ctl = {};
-    var atkKey = this.game.input.keyboard.addKey(Phaser.Keyboard.A);
+    var atkKey = this.game.input.keyboard.addKey(Phaser.Keyboard.W);
     atkKey.onDown.add(this.attack.bind(this));
 
     for (var key in keyMap) {
@@ -92,17 +100,39 @@ BasicGame.Game.prototype = {
   },
 
   attack: function() {
+    var avgSep = this.player.width;
     console.log(this.player.leftRight);
-    var reach = this.player.leftRight === "left"? -50 : 50;
     this.e.forEach(function(e) {
-      // if (Math.abs(e.position.y - this.player.position.y) > this.player.height) {
+      // if ((e.position.y - this.player.position.y > this.player.height/4) ||
+          // (e.position.y - this.player.position.y < 0)) {
         // return;
       // }
-      if (e.position.x - this.player.position.x > reach) {
-        return;
+      if (this.player.leftRight === "right") {
+        window.setTimeout(function() {
+          this.player.loadTexture("fridgeR");
+        }.bind(this), 200);
+        this.player.loadTexture("atkR");
+        if ((this.player.position.x > e.position.x) ||
+            (e.position.x - this.player.position.x > this.player.width * 1.5)) {
+          return;
+        }
+      } else if (this.player.leftRight === "left") {
+        this.player.loadTexture("atkL");
+        window.setTimeout(function() {
+          this.player.loadTexture("fridgeL");
+        }.bind(this), 200);
+        if ((this.player.position.x < e.position.x) ||
+            (this.player.position.x - e.position.x > this.player.width * 1.5)) {
+          return;
+        }
       }
-      e.kill();
-      // die, and set timeout to spawn new
+      e.destroy();
+      this.funds += Math.random() * 5000 | 0;
+      this.updateScore();
+      window.setTimeout(function() {
+        this.spawnEnemy();
+        this.spawnEnemy();
+      }.bind(this), 1000);
     }.bind(this));
 
   },
@@ -110,17 +140,19 @@ BasicGame.Game.prototype = {
   spawnEnemy: function() {
     var randY = Math.random();
     var randX = Math.round(Math.random());
-    var enemy = this.e.create(randX * this.game.width, randY * this.game.height, "player");
-    enemy.alpha = 0.4;
+    var enemy = this.e.create(randX * this.game.width, randY * this.game.height, "lawyer");
     enemy.anchor.set(0.5, 0.5);
+    this.game.physics.arcade.enable(enemy);
   },
 
   update: function () {
     this.player.velocity *= 0.98;
-    if (this.player.body.velocity.x > 0) {
+    if (this.player.body.velocity.x > 0 && this.player.leftRight !== "right") {
       this.player.leftRight = "right";
-    } else if (this.player.body.velocity.x < 0) {
+      this.player.loadTexture("fridgeR");
+    } else if (this.player.body.velocity.x < 0 && this.player.leftRight !== "left") {
       this.player.leftRight = "left";
+      this.player.loadTexture("fridgeL");
     }
     this.game.physics.arcade.collide(this.player, this.e, this.loseAccreditation.bind(this));
   },
@@ -128,6 +160,7 @@ BasicGame.Game.prototype = {
   loseAccreditation: function () {
     this.player.accreditations -= 1;
     console.log(this.player.accreditations);
+    this.updateScore();
     // play anim
     if (this.player.accreditations === 0) {
       this.quitGame();

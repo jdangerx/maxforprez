@@ -13,7 +13,8 @@ BasicGame.MainMenu.prototype = {
 
 	create: function () {
 
-	  this.bg = this.add.tileSprite(0, 0, this.game.width, this.game.height, 'starfield');
+	  this.bg = this.add.sprite(0, 0, "menubg");
+          this.bg.scale = 
 
 	  this.playbtn = this.add.sprite(this.game.width/2, this.game.height/2, 'playbtn');
 	  this.playbtn.anchor.set(0.5, 0.5);
