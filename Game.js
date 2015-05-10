@@ -38,7 +38,7 @@ BasicGame.Game.prototype = {
     this.funds = 0
     this.score = this.game.add.text(this.game.width/2,
                                     this.game.height/4,
-                                    "Campaign Funding: " + this.funds);
+                                    "Campaign Funding: $" + this.funds);
     this.score.anchor.set(0.5, 0.5);
     this.creds = this.game.add.text(this.game.width/2,
                                     this.game.height/3,
@@ -60,7 +60,7 @@ BasicGame.Game.prototype = {
   },
 
   updateScore: function() {
-    this.score.text = "Campaign Funding: " + this.funds;
+    this.score.text = "Campaign Funding: $" + this.funds;
     this.creds.text = "Accreditations: " + this.player.accreditations;
   },
 
